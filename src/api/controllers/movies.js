@@ -3,18 +3,22 @@ const { asyncErrorBoundary } = require("../../utils/errors");
 
 // Middleware to check if a movie exists
 async function movieExists(req, res, next) {
-  const { movieId } = req.params;
-  try {
-    const movie = await service.getMovieById(movieId);
-    if (!movie) {
-      return next({ status: 404, message: "Movie cannot be found." });
-    }
-    // Attach the movie object to the res.locals for later use in the route handlers
-    res.locals.movie = movie;
+  if (req.originalUrl === "/theaters" || req.originalUrl === '/reviews') {
     next();
-  } catch (error) {
-    console.error(error);
-    next(error);
+  } else {
+    const { movieId } = req.params;
+    try {
+      const movie = await service.getMovieById(movieId);
+      if (!movie) {
+        return next({ status: 404, message: "Movie cannot be found." });
+      }
+      // Attach the movie object to the res.locals for later use in the route handlers
+      res.locals.movie = movie;
+      next();
+    } catch (error) {
+      console.error(error);
+      next(error);
+    }
   }
 }
 
@@ -89,8 +93,9 @@ async function getAllMovies(req, res) {
 }
 
 module.exports = {
+  movieExists,
+  getTheatersForMovie,
+  getReviewsForMovie,
   getMovieById: [asyncErrorBoundary(movieExists), getMovieById],
-  getTheatersForMovie: [asyncErrorBoundary(movieExists), getTheatersForMovie],
-  getReviewsForMovie: [asyncErrorBoundary(movieExists), getReviewsForMovie],
   getAllMovies: asyncErrorBoundary(getAllMovies),
 };

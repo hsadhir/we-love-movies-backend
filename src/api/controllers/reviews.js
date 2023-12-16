@@ -1,5 +1,17 @@
 const service = require("../services/reviews");
-const { asyncErrorBoundary } = require("../../utils/errors");
+const { asyncErrorBoundary, methodNotAllowed } = require("../../utils/errors");
+
+const { movieExists, getReviewsForMovie } = require("./movies");
+
+async function getReviews(req, res, next) {
+  const { movieId } = req.params;
+
+  if (movieId) {
+    getReviewsForMovie(req, res);
+  } else {
+    methodNotAllowed(req, res, next);
+  }
+}
 
 // Middleware to check if a review exists
 async function reviewExists(req, res, next) {
@@ -38,6 +50,7 @@ async function deleteReview(req, res) {
 }
 
 module.exports = {
+  getReviews: [asyncErrorBoundary(movieExists), getReviews],
   updateReview: [asyncErrorBoundary(reviewExists), updateReview],
   deleteReview: [asyncErrorBoundary(reviewExists), deleteReview],
 };
